@@ -5,7 +5,7 @@ This project reverse engineers the Office 365 Outlook webapp API, collecting all
 
 The `x-owa-canary` cookie is automatically retrieved from your browser and used to authenticate the API request. The API response is then parsed and entered into a 2d array. This array is then converted into a comma-separated-value format which is then downloaded as a `.csv` file via your browser.
 
-![Screenshot of the console output](https://user-images.githubusercontent.com/24913281/171161560-74377a83-0839-41af-8700-ac1bb2d04b38.png)
+![Screenshot of the console output](https://smcclennon-img.netlify.app/projects/ous/console-output.png)
 
 ### Sample csv
 Below is the data structure of the `.csv` file generated, formatted as a Markdown table (information redacted):
@@ -43,11 +43,11 @@ https://github.com/smcclennon/ous/blob/ea840034e31ab92a6806f364074d220c73254583/
 3. In Developer Tools, go to the "Network" tab.
 4. Go back to your Outlook browser tab (opened in step 1). On the left you should see a list of user directories (this may be hidden behind the burger menu). Click on the user directory you want to scrape. Many new requests should pop up in your Developer Tools Network tab once you do this.
 
-![image](https://user-images.githubusercontent.com/24913281/170897328-ae7680dd-a036-4d6f-ab38-a45593591fa6.png)
+![image](https://smcclennon-img.netlify.app/projects/ous/outlook-directory.png)
 
 5. On the Developer Tools Network tab, identify the first request that occurred when you completed step 4. The request URL/file should look similar to: `service.svc?action=FindPeople&app=People&n=33`. *(If you find it difficult identifying which request occurred first, try clearing the Network tab request list (bin icon) and then performing step 4 again. The correct request will then most likely be the first one in the list).*
 
-![image](https://user-images.githubusercontent.com/24913281/170897905-2f3b13d0-6e20-4bc8-b185-9fe1d1c84c77.png)
+![image](https://smcclennon-img.netlify.app/projects/ous/network-request.png)
 
 6. Right click that request and from the dropdown, select:
     - Chrome: "Copy" -> "Copy as fetch".
