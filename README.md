@@ -1,7 +1,7 @@
 # Office365 User Scraper
 Export everyone in your Office 365 organisation into a `.csv` in seconds, straight from your browser, without any admin tools.
 
-This project reverse engineers the Office 365 Outlook webapp API, collecting all users in an Outlook directory via a single API request. All you have to do is obtain a `BaseFolderID` and paste JavaScript code into your browser console. All users within that BaseFolder will be downloaded to a .csv file on your computer.
+This project reverse engineers the Office 365 Outlook webapp API, collecting all users in an Outlook directory via ~~a single~~ API requests. All you have to do is ~~obtain a `BaseFolderID` and~~ paste JavaScript code into your browser console. All users within that ~~BaseFolder~~ Directory will be downloaded to a .csv file on your computer.
 
 The `x-owa-canary` cookie is ~~automatically retrieved from your browser and used to authenticate the API request~~ no longer required. Authentication is performed retrieving the Authorization Bearer token from LocalStorage.
 
