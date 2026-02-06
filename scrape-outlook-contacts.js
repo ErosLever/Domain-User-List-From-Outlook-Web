@@ -1,175 +1,168 @@
-// Scrape users in your Office 365 organisation
-// github.com/smcclennon/ous
+// Download text to a file
+// https://stackoverflow.com/a/47359002
+function saveAs(text, filename) {
+    var pom = document.createElement('a');
+    pom.setAttribute('href', 'data:text/plain;charset=urf-8,' + encodeURIComponent(text));
+    pom.setAttribute('download', filename);
+    pom.click();
+};
 
-// Delete all variables created in this block once execution finishes
-(async () => {
+// Convert 2d array into comma separated values
+// https://stackoverflow.com/a/14966131
+function convertToCsv(rows) {
+    //let csvContent = "data:text/csv;charset=utf-8,";
+    const s = ',';    // separator
+    const q = '"';    // quote
+    const l = '\r\n'; // line ending
+    let csvContent = ["ADObjectId","EmailAddress","DisplayName"].join(s) + l;
 
-    // This needs to be replaced with a valid BaseFolderId or the API request will fail
-    // How to obtain a BaseFolderId: https://github.com/smcclennon/ous#how-to-get-a-basefolderid
-    const base_folder_id = "a000a000-0aa0-0a0a-aa00-a000a0000a0a"
+    rows.forEach(function(rowArray) {
+        let row = rowArray.map(x => x.includes(q) || x.includes(s) ? `${q}${x.replaceAll(q,q+q)}${q}` : x ).join(",");
+        csvContent += row + "\r\n";
+    });
+    return csvContent;
+}
 
-    // See bottom of the file for the csv export filename
-
-    // Get date and time. Used for filename when saving .csv
-    function getDateTime() {
-        const year = new Date().getFullYear();
-        const month = new Date().getMonth() + 1; //0-11 + 1
-        const day = new Date().getDay();
-        const date = year + '-' + month + '-' + day;
-        
-        const hours = new Date().getHours();
-        const minutes = new Date().getMinutes();
-        const seconds = new Date().getSeconds();
-        const time = hours + '-' + minutes + '-' + seconds;
-        
-        // 2022-5-2_10-42-40
-        return date + '_' + time;
-    }
-    // Get a cookie from the browser. Used to get the x-owa-canary authentication cookie
-    // https://www.tabnine.com/academy/javascript/how-to-get-cookies/
-    function getCookie(cName) {
-        const name = cName + "=";
-        const cDecoded = decodeURIComponent(document.cookie); //to be careful
-        const cArr = cDecoded.split('; ');
-        let res;
-        cArr.forEach(val => {
-          if (val.indexOf(name) === 0) res = val.substring(name.length);
-        })
-        return res
-      }
-
-    // Download text to a file
-    // https://stackoverflow.com/a/47359002
-    function saveAs(text, filename){
-        var pom = document.createElement('a');
-        pom.setAttribute('href', 'data:text/plain;charset=urf-8,'+encodeURIComponent(text));
-        pom.setAttribute('download', filename);
-        pom.click();
-      };
-
-    // Convert 2d array into comma separated values
-    // https://stackoverflow.com/a/14966131
-    function convertToCsv(rows) {
-        //let csvContent = "data:text/csv;charset=utf-8,";
-        let csvContent = "";
-
-        rows.forEach(function(rowArray) {
-            let row = rowArray.join(",");
-            csvContent += row + "\r\n";
-        });
-        return csvContent;
-    }
-
-    // Reverse engineered API call to retrieve an array of users in an Outlook directory
-    // Example AddressListId: "a000a000-0aa0-0a0a-aa00-a000a0000a0a"
-    // Example Offset: "300"
-    // Example MaxEntriesReturned: "100"
-    async function getUsersFromAddressList(BaseFolderId, Offset, MaxEntriesReturned, x_owa_canary) {
-        console.log('Performing API request...')
-        const response = await fetch("https://outlook.office.com/owa/service.svc?action=FindPeople&app=People", {
-            "credentials": "include",
-            "headers": {
-                "User-Agent": "Mozilla/5.0 (X11; U; Linux x86_64; en-US) Gecko/20072401 Firefox/98.0",
-                //"Accept": "*/*",
-                "Accept-Language": "en-US,en;q=0.5",
-                "action": "FindPeople",
-                "content-type": "application/json; charset=utf-8",
-                //"ms-cv": "",
-                "prefer": "exchange.behavior=\"IncludeThirdPartyOnlineMeetingProviders\"",
-                "x-owa-canary": x_owa_canary,
-                //"x-owa-correlationid": "",
-                //"x-owa-sessionid": "",
-                // For a decoded version of x-owa-urlpostdata, please see: https://github.com/smcclennon/ous#x-owa-urlpostdata-decoded
-                "x-owa-urlpostdata": "%7B%22__type%22%3A%22FindPeopleJsonRequest%3A%23Exchange%22%2C%22Header%22%3A%7B%22__type%22%3A%22JsonRequestHeaders%3A%23Exchange%22%2C%22RequestServerVersion%22%3A%22V2018_01_08%22%2C%22TimeZoneContext%22%3A%7B%22__type%22%3A%22TimeZoneContext%3A%23Exchange%22%2C%22TimeZoneDefinition%22%3A%7B%22__type%22%3A%22TimeZoneDefinitionType%3A%23Exchange%22%2C%22Id%22%3A%22GMT%20Standard%20Time%22%7D%7D%7D%2C%22Body%22%3A%7B%22IndexedPageItemView%22%3A%7B%22__type%22%3A%22IndexedPageView%3A%23Exchange%22%2C%22BasePoint%22%3A%22Beginning%22%2C%22Offset%22%3A"+Offset+"%2C%22MaxEntriesReturned%22%3A"+MaxEntriesReturned+"%7D%2C%22QueryString%22%3Anull%2C%22ParentFolderId%22%3A%7B%22__type%22%3A%22TargetFolderId%3A%23Exchange%22%2C%22BaseFolderId%22%3A%7B%22__type%22%3A%22AddressListId%3A%23Exchange%22%2C%22Id%22%3A%22"+BaseFolderId+"%22%7D%7D%2C%22PersonaShape%22%3A%7B%22__type%22%3A%22PersonaResponseShape%3A%23Exchange%22%2C%22BaseShape%22%3A%22Default%22%2C%22AdditionalProperties%22%3A%5B%7B%22__type%22%3A%22PropertyUri%3A%23Exchange%22%2C%22FieldURI%22%3A%22PersonaAttributions%22%7D%2C%7B%22__type%22%3A%22PropertyUri%3A%23Exchange%22%2C%22FieldURI%22%3A%22PersonaTitle%22%7D%2C%7B%22__type%22%3A%22PropertyUri%3A%23Exchange%22%2C%22FieldURI%22%3A%22PersonaOfficeLocations%22%7D%5D%7D%2C%22ShouldResolveOneOffEmailAddress%22%3Afalse%2C%22SearchPeopleSuggestionIndex%22%3Afalse%7D%7D",
-                //"x-req-source": "People",
-                //"Sec-Fetch-Dest": "empty",
-                //"Sec-Fetch-Mode": "cors",
-                //"Sec-Fetch-Site": "same-origin",
-                //"Sec-GPC": "1",
-                "Pragma": "no-cache",
-                "Cache-Control": "no-cache"
-            },
-            "method": "POST",
-            //"mode": "cors"
-        })
-            .then(data => data.json());
-
-        // Array(143) [ {…}, {…}, {…} … ]
-        let users = response.Body.ResultSet;
-        return users
-    }
-
-    // Get x-owa-canary
-    console.debug('Getting x-owa-canary cookie...')
-    const canary = getCookie("X-OWA-CANARY");
-    if (canary == undefined) {
-		throw "Couldn't retrieve x-owa-canary from your cookies! Please make sure you run this code on a console window for https://outlook.office.com and that you are logged in, then try again."
-	} else {
-        console.debug('Using x-owa-canary: ' + canary);
-    }
-
-    // Store all extracted user data
-    // [[id1, John Smith, jsmith@example.com], [id2, Foo Bar, fbar@example.com]]
-    // Initiate with field names for when user_db is converted into csv format
-    const user_db = [['PersonaId', 'DisplayName', 'EmailAddress']];
-
-    // Get all users
-    const users = await getUsersFromAddressList(
-        base_folder_id, "0", "1000", canary)
-        .catch(e => {
-            // API declined our request
-            const error_description = "API Request failed. Please check your 'x-owa-canary' is correct and valid.\n\nWe automatically collected this from your cookies, so try logging out and logging back into https://outlook.office.com.\n\ncanary = " + canary + '\n\nAPI request/response error:\n' + e;
-            throw error_description;
+var x_owa_urlpostdata = {
+    "__type": "FindPeopleJsonRequest:#Exchange",
+    "Header": {
+        "__type": "JsonRequestHeaders:#Exchange",
+        "RequestServerVersion": "V2018_01_08",
+        "TimeZoneContext": {
+            "__type": "TimeZoneContext:#Exchange",
+            "TimeZoneDefinition": {
+                "__type": "TimeZoneDefinitionType:#Exchange",
+                "Id": "W. Europe Standard Time"
+            }
         }
-    );
+    },
+    "Body": {
+        "__type": "FindPeopleRequest:#Exchange",
+        "IndexedPageItemView": {
+            "__type": "IndexedPageView:#Exchange",
+            "BasePoint": "Beginning",
+            "Offset": 1337.1337,
+            "MaxEntriesReturned": 150
+        },
+        "PersonaShape": {
+            "__type": "PersonaResponseShape:#Exchange",
+            "BaseShape": "Default",
+            "AdditionalProperties": [{
+                "__type": "PropertyUri:#Exchange",
+                "FieldURI": "PersonaAttributions"
+            }, {
+                "__type": "PropertyUri:#Exchange",
+                "FieldURI": "PersonaRelevanceScore"
+            }, {
+                "__type": "PropertyUri:#Exchange",
+                "FieldURI": "PersonaTitle"
+            }]
+        },
+        "ShouldResolveOneOffEmailAddress": false,
+        "QueryString": "PLACEHOLDER",
+        "SearchPeopleSuggestionIndex": true,
+        "Context": [{
+            "__type": "ContextProperty:#Exchange",
+            "Key": "AppName",
+            "Value": "OWA"
+        }, {
+            "__type": "ContextProperty:#Exchange",
+            "Key": "AppScenario",
+            "Value": "peopleHubReact"
+        }, {
+            "__type": "ContextProperty:#Exchange",
+            "Key": "DisableAdBasedPersonaIdForPersonalContacts",
+            "Value": "true"
+        }],
+        "QuerySources": [
+            "Directory"
+        ]
+    }
+};
 
-    // API accepted our request and responsed
-    console.debug("API request successful!");
+// Get Bearer Token from LocalStorage
+var keys = Object.keys(localStorage).filter(
+    x => x.startsWith('msal') && /login\.windows\.net/.test(x) && /accesstoken/.test(x) && /outlook\.office\.com/.test(x)
+);
 
-    // If API response contained no users
-    if (users == null | users.length == 0) {
-        const error_description = "API Request returned no users. Please check your 'BaseFolderId' is valid. You can find this at the top of the program:\nbase_folder_id = " + base_folder_id + '\n\nHow to obtain a BaseFolderId: https://github.com/smcclennon/ous#how-to-get-a-basefolderid\n\nIt is also possible that the user directory you collected the BaseFolderId for is empty and contains no users. If this is the case, please try using the BaseFolderId for a user directory containing at least 1 user and try again.';
-        throw error_description;
-    } else {
-        console.log('Retrieved ' + users.length + ' users!');
+var local_storage_stuff = JSON.parse(localStorage[keys[0]]);
+var bearer_token = local_storage_stuff.secret;
+var tenant_id = local_storage_stuff.realm;
+
+
+
+
+
+async function fetchAllItems() {
+    let user_db = new Set();
+
+    // Listing all users requires Directory.Read.All which is hardly the case for unprivileged users
+    // instead we perform a basic search of single characters
+    var queries = [].map.call("1234567890qwertyuiopasdfghjklzxcvbnm", x => x);
+    while (queries.length > 0) {
+
+        let query = queries.shift();
+
+        // Outlook forces max 150 results pagination, we keep track of the offset
+        let offset = 0;
+        while (true) {
+
+            // Compose actual URL with offset and search query (single character)
+            let x_owa_urlpostdata_offset = JSON.stringify(x_owa_urlpostdata)
+                .replace('1337.1337', offset)
+                .replace('PLACEHOLDER', query);
+
+            const response = await fetch("https://outlook.office.com/owa/service.svc?action=FindPeople&app=People", {
+                "headers": {
+                    "accept": "*/*",
+                    "accept-language": "en-US;q=0.9,en;q=0.8",
+                    "action": "FindPeople",
+                    "authorization": "Bearer " + bearer_token,
+                    "cache-control": "no-cache",
+                    "content-type": "application/json; charset=utf-8",
+                    "pragma": "no-cache",
+                    "prefer": "IdType=\"ImmutableId\", exchange.behavior=\"IncludeThirdPartyOnlineMeetingProviders\"",
+                    "x-owa-urlpostdata": encodeURIComponent(x_owa_urlpostdata_offset),
+                    "x-req-source": "People",
+                    "x-tenantid": tenant_id
+                },
+                "body": null,
+                "method": "POST",
+                "mode": "cors",
+                "credentials": "include"
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            let users = data.Body.ResultSet;
+
+            if (users.length === 0)
+                break
+
+            users.map(user => [
+                user.ADObjectId,
+                user.EmailAddress.EmailAddress,
+                user.DisplayName
+            ]).map(x => user_db.add(x));
+
+            offset += users.length;
+        }
     }
 
-    // Iterate through all users
-    for (let index = 0; index < users.length; index++) {
-        console.debug('\nAccessing user at index: ' + index)
-
-        // Extract information from user API data
-        let user = users[index];
-        let displayname = user.DisplayName;
-        let emailaddress = user.EmailAddress.EmailAddress
-        let personaid = user.PersonaId.Id;
-
-        // Compile extracted information into an array
-        let userdata = [personaid, displayname, emailaddress];
-
-        // Save compiled user information
-        user_db.push(userdata);
-        console.debug('New user: ' + userdata);
-    }
-
-    // Print user_db array to console
-    console.debug('\nUser array:')
-    console.debug(user_db);
-
-    // .csv export filename
-    let export_filename = "office365_export";
-    export_filename += "__";
-    export_filename += base_folder_id;  // Add a000a000-0aa0-0a0a-aa00-a000a0000a0a
-    export_filename += "__";
-    export_filename += getDateTime();  // Add 2022-5-2_10-42-40
-    export_filename += '.csv';  // Add file extension
-    // Final: office365_export__a000a000-0aa0-0a0a-aa00-a000a0000a0a__2022-5-2_10-42-40.csv
-
+    let export_filename = "office365_export.csv"
 
     // Download database as a .csv file
     console.debug('Converting user array to csv...')
     let user_db_csv = convertToCsv(user_db);
     console.debug('Downloading csv...')
     saveAs(user_db_csv, export_filename);
-    console.log('Downloaded results to "'+ export_filename+'"!');
-})();
+    console.log('Downloaded results to "' + export_filename + '"!');
+    return user_db;
+}
+
+fetchAllItems()
+    .then(items => console.log("Fetched:", items.length))
+    .catch(console.error);
