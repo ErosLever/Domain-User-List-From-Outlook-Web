@@ -17,8 +17,8 @@ function convertToCsv(rows) {
     let csvContent = ["ADObjectId","EmailAddress","DisplayName"].join(s) + l;
 
     rows.forEach(function(rowArray) {
-        let row = rowArray.map(x => x.includes(q) || x.includes(s) ? `${q}${x.replaceAll(q,q+q)}${q}` : x ).join(",");
-        csvContent += row + "\r\n";
+        let row = rowArray.map(x => x.includes(q) || x.includes(s) ? `${q}${x.replaceAll(q,q+q)}${q}` : x ).join(s);
+        csvContent += row + l;
     });
     return csvContent;
 }
@@ -152,7 +152,7 @@ async function fetchAllItems() {
         }
     }
 
-    let export_filename = "office365_export.csv"
+    let export_filename = `office365_export_${tenant_id}_${new Date().toISOString().replace(/\D/g,'')}.csv`
 
     // Download database as a .csv file
     console.debug('Converting user array to csv...')
