@@ -152,7 +152,7 @@ async function fetchAllItems() {
         }
     }
 
-    let export_filename = `office365_export_${tenant_id}_${new Date().toISOString().replace(/\D/g,'')}.csv`
+    let export_filename = `office365_export_${tenant_id}_${new Date().toISOString().replace(/\D/g,'')}.csv`;
 
     // Download database as a .csv file
     console.debug('Converting user array to csv...')
